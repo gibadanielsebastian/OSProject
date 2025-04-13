@@ -23,16 +23,17 @@ typedef struct
 
 void makeSymbolicLink(char *path, char *linkPath)
 {
-    char command[2048];
-    sprintf(command, "ln -s -f \"%s\" \"%s\"", path, linkPath);
-    system(command);
+    if (symlink(path, linkPath) == -1)
+    {
+        perror("Error creating symbolic link");
+    }
 }
 
 void addTreasure(char *huntID, int id, char *userName, Coordinate coord, char *clue, int value)
 {
     char path[1024];
     sprintf(path, "%s/treasures.dat", huntID);
-    int treasureFile = open(path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+    int treasureFile = open(path, O_WRONLY | O_CREAT | O_APPEND, 0666);
     if (treasureFile == -1)
     {
         perror("Error opening treasure file.\n");
@@ -102,10 +103,6 @@ void addTreasure(char *huntID, int id, char *userName, Coordinate coord, char *c
     }
     char logPathLink[2048];
     sprintf(logPathLink, "log_%s.txt", huntName);
-
-    printf("logPPath: %s\n", logPath);
-    printf("logPathLink: %s\n", logPathLink);
-    printf("huntName: %s\n", huntName);
 
     // Create the symbolic link
     makeSymbolicLink(logPath, logPathLink);

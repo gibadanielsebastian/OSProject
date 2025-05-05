@@ -1,1 +1,1 @@
-list_hunts
+stop_monitor

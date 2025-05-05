@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
 
 typedef struct
 {
@@ -23,6 +24,13 @@ typedef struct
 
 void makeSymbolicLink(char *path, char *linkPath)
 {
+    FILE *file = fopen(linkPath, "r");
+    if (file != NULL)
+    {
+        fclose(file);
+        remove(linkPath);
+    }
+
     if (symlink(path, linkPath) == -1)
     {
         perror("Error creating symbolic link");

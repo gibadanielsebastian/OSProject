@@ -15,3 +15,8 @@
 2025-05-05 08:45:07 - Listed treasures.
 2025-05-05 08:45:22 - Added Treasure ID: 5, User: dsa, Coordinate: (1.00, 1.00), Clue: 1, Value: 1
 2025-05-05 08:49:32 - Added Treasure ID: 6, User: 1dsa, Coordinate: (1.00, 1.00), Clue: 1, Value: 1
+2025-05-05 08:59:21 - Listed treasures.
+2025-05-05 09:03:39 - Listed treasures.
+2025-05-05 09:14:22 - Listed treasures.
+2025-05-05 09:14:40 - Viewed Treasure ID: 1.
+2025-05-05 09:21:27 - Listed treasures.

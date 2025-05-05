@@ -22,6 +22,130 @@ typedef struct
     int value;
 } Treasure;
 
+// Check if the current user has write permission to the given directory
+int hasWritePermission(const char *path)
+{
+    if (access(path, W_OK) == 0) {
+        return 1; // Has write permission
+    }
+    return 0; // No write permission
+}
+
+// Ensure the Hunts directory exists and is writable
+int ensureHuntsDirectory()
+{
+    // Check if "Hunts" folder exists
+    DIR *dir = opendir("Hunts");
+    if (dir == NULL) {
+        // Create the Hunts folder with full permissions
+        if (mkdir("Hunts", 0755) != 0) {
+            perror("Error creating Hunts directory");
+            return 0;
+        }
+        printf("Created Hunts directory\n");
+        return 1;
+    }
+    
+    closedir(dir);
+    
+    // Check if we have write permission
+    if (!hasWritePermission("Hunts")) {
+        printf("No write permission for Hunts directory. Recreating...\n");
+        
+        // Rename the old directory
+        char oldPath[256];
+        sprintf(oldPath, "Hunts_old_%ld", (long)time(NULL));
+        if (rename("Hunts", oldPath) != 0) {
+            perror("Error renaming existing Hunts directory");
+            return 0;
+        }
+        
+        // Create a new directory with proper permissions
+        if (mkdir("Hunts", 0755) != 0) {
+            perror("Error creating new Hunts directory");
+            return 0;
+        }
+        
+        printf("Recreated Hunts directory with proper permissions\n");
+    }
+    
+    return 1;
+}
+
+// Ensure the specific Hunt directory exists and is writable
+int ensureHuntDirectory(const char *huntID)
+{
+    char path[1024];
+    sprintf(path, "Hunts/%s", huntID);
+    
+    // Check if directory exists
+    DIR *dir = opendir(path);
+    if (dir == NULL) {
+        // Create directory with proper permissions
+        if (mkdir(path, 0755) != 0) {
+            perror("Error creating hunt directory");
+            return 0;
+        }
+        printf("Created hunt directory: %s\n", path);
+        return 1;
+    }
+    
+    closedir(dir);
+    
+    // Check write permission
+    if (!hasWritePermission(path)) {
+        printf("No write permission for hunt directory. Recreating...\n");
+        
+        // Rename the old directory
+        char oldPath[1280];
+        sprintf(oldPath, "%s_old_%ld", path, (long)time(NULL));
+        if (rename(path, oldPath) != 0) {
+            perror("Error renaming existing hunt directory");
+            return 0;
+        }
+        
+        // Create a new directory with proper permissions
+        if (mkdir(path, 0755) != 0) {
+            perror("Error creating new hunt directory");
+            return 0;
+        }
+        
+        // Try to copy files from old directory if possible
+        DIR *oldDir = opendir(oldPath);
+        if (oldDir != NULL) {
+            struct dirent *entry;
+            while ((entry = readdir(oldDir)) != NULL) {
+                if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+                    continue;
+                
+                char oldFilePath[2048], newFilePath[2048];
+                sprintf(oldFilePath, "%s/%s", oldPath, entry->d_name);
+                sprintf(newFilePath, "%s/%s", path, entry->d_name);
+                
+                // Copy file content (basic implementation)
+                FILE *oldFile = fopen(oldFilePath, "rb");
+                if (oldFile != NULL) {
+                    FILE *newFile = fopen(newFilePath, "wb");
+                    if (newFile != NULL) {
+                        char buffer[4096];
+                        size_t bytes;
+                        while ((bytes = fread(buffer, 1, sizeof(buffer), oldFile)) > 0) {
+                            fwrite(buffer, 1, bytes, newFile);
+                        }
+                        fclose(newFile);
+                    }
+                    fclose(oldFile);
+                }
+            }
+            closedir(oldDir);
+        }
+        
+        printf("Recreated hunt directory with proper permissions: %s\n", path);
+    }
+    
+    return 1;
+}
+
 void makeSymbolicLink(char *path, char *linkPath)
 {
     FILE *file = fopen(linkPath, "r");
@@ -95,7 +219,6 @@ void addTreasure(char *huntID, int id, char *userName, Coordinate coord, char *c
     close(logFile);
 
     // Create a symbolic link to the treasure log file
-
     char huntName[1024];
     // Extract just the hunt name from the path
     char *huntNamePtr = strrchr(huntID, '/');
@@ -275,14 +398,20 @@ int main(int argc, char *argv[])
     // Check if the program is used correctly
     if (argc == 1 || (strcmp(argv[1], "add") != 0 && strcmp(argv[1], "list") != 0 && strcmp(argv[1], "view") != 0 && strcmp(argv[1], "remove") != 0))
     {
-        printf("Invalid command. Usage: ./a.exe <add | list | view | remove>\n");
+        printf("Invalid command. Usage: ./treasure_manager <add | list | view | remove>\n");
         return 0;
+    }
+
+    // First ensure that the Hunts directory exists and is writable
+    if (!ensureHuntsDirectory()) {
+        printf("Failed to ensure Hunts directory is accessible. Exiting.\n");
+        return 1;
     }
 
     // Adding a treasure to a Hunt
     if (strcmp(argv[1], "add") == 0 && argc == 2)
     {
-        printf("Invalid command. Usage: ./a.exe add <HuntID>\n");
+        printf("Invalid command. Usage: ./treasure_manager add <HuntID>\n");
         return 0;
     }
     else if (strcmp(argv[1], "add") == 0 && argc == 3)
@@ -295,24 +424,21 @@ int main(int argc, char *argv[])
         {
             char path[1024];
             sprintf(path, "Hunts/%s", argv[2]);
-            DIR *dir = opendir(path);
-            if (dir == NULL)
-            {
-                mkdir(path, 0644);
-
-                getTreasureInfo(path);
+            
+            // Ensure the hunt directory exists and is writable
+            if (!ensureHuntDirectory(argv[2])) {
+                printf("Failed to ensure hunt directory is accessible. Exiting.\n");
+                return 1;
             }
-            else
-            {
-                getTreasureInfo(path);
-            }
+            
+            getTreasureInfo(path);
         }
     }
 
     // Listing treasures in a Hunt
     if (strcmp(argv[1], "list") == 0 && argc != 3)
     {
-        printf("Invalid command. Usage: ./a.exe list <HuntID>\n");
+        printf("Invalid command. Usage: ./treasure_manager list <HuntID>\n");
         return 0;
     }
     else if (strcmp(argv[1], "list") == 0 && argc == 3)
@@ -323,6 +449,12 @@ int main(int argc, char *argv[])
         }
         else
         {
+            // Ensure the hunt directory exists and is accessible
+            if (!ensureHuntDirectory(argv[2])) {
+                printf("Failed to ensure hunt directory is accessible. Exiting.\n");
+                return 1;
+            }
+            
             char treasuresPath[1024];
             sprintf(treasuresPath, "Hunts/%s/treasures.dat", argv[2]);
             int treasureFile = open(treasuresPath, O_RDONLY);
@@ -382,7 +514,7 @@ int main(int argc, char *argv[])
             // Log the listing of treasures
             char logPath[1024];
             sprintf(logPath, "Hunts/%s/log.txt", argv[2]);
-            int logFile = open(logPath, O_WRONLY | O_APPEND, 0644);
+            int logFile = open(logPath, O_WRONLY | O_APPEND | O_CREAT, 0644);
             if (logFile == -1)
             {
                 perror("Error opening log file.\n");
@@ -412,7 +544,7 @@ int main(int argc, char *argv[])
     // Viewing information about a treasure in a Hunt by ID
     if (strcmp(argv[1], "view") == 0 && argc != 4)
     {
-        printf("Invalid command. Usage: ./a.exe view <HuntID> <TreasureID>\n");
+        printf("Invalid command. Usage: ./treasure_manager view <HuntID> <TreasureID>\n");
         return 0;
     }
     else if (strcmp(argv[1], "view") == 0 && argc == 4)
@@ -423,6 +555,16 @@ int main(int argc, char *argv[])
         }
         else
         {
+            // Only need read access for viewing
+            char huntPath[1024];
+            sprintf(huntPath, "Hunts/%s", argv[2]);
+            DIR *dir = opendir(huntPath);
+            if (dir == NULL) {
+                printf("Hunt directory does not exist or cannot be accessed.\n");
+                return 1;
+            }
+            closedir(dir);
+            
             char treasuresPath[1024];
             sprintf(treasuresPath, "Hunts/%s/treasures.dat", argv[2]);
             int treasureFile = open(treasuresPath, O_RDONLY);
@@ -452,10 +594,16 @@ int main(int argc, char *argv[])
             }
             close(treasureFile);
 
+            // Ensure we can write to the log file
+            if (!ensureHuntDirectory(argv[2])) {
+                printf("Warning: Cannot log this view operation due to permission issues.\n");
+                return 0;
+            }
+
             // Log the viewing of the treasure
             char logPath[1024];
             sprintf(logPath, "Hunts/%s/log.txt", argv[2]);
-            int logFile = open(logPath, O_WRONLY | O_APPEND, 0644);
+            int logFile = open(logPath, O_WRONLY | O_APPEND | O_CREAT, 0644);
             if (logFile == -1)
             {
                 perror("Error opening log file.\n");
@@ -485,7 +633,7 @@ int main(int argc, char *argv[])
     // Removing a Hunt or a treasure from a Hunt by ID
     if (strcmp(argv[1], "remove") == 0 && argc != 3 && argc != 4)
     {
-        printf("Invalid command. Usage: ./a.exe remove <HuntID> [TreasureID]\n");
+        printf("Invalid command. Usage: ./treasure_manager remove <HuntID> [TreasureID]\n");
         return 0;
     }
     else if (strcmp(argv[1], "remove") == 0 && argc == 3)
@@ -506,11 +654,16 @@ int main(int argc, char *argv[])
             }
             closedir(dir);
 
+            // Check if we have permission to remove
+            if (!hasWritePermission(path)) {
+                printf("No permission to remove hunt directory. Attempting to force removal...\n");
+                // Try to change permissions before removal
+                chmod(path, 0777);
+            }
+
             // Remove the hunt directory and its contents
             char command[2048];
-
             sprintf(command, "rm -rf \"%s\"", path);
-
             system(command);
 
             DIR *dir2 = opendir(path);
@@ -520,8 +673,7 @@ int main(int argc, char *argv[])
                 return 0;
             }
             closedir(dir2);
-
-            // No need of logging here as the hunt directory is removed completely, therefore so is the log file.
+            printf("Failed to remove hunt directory. Check permissions.\n");
         }
     }
     else if (strcmp(argv[1], "remove") == 0 && argc == 4)
@@ -532,6 +684,12 @@ int main(int argc, char *argv[])
         }
         else
         {
+            // Ensure we have write permission for the hunt directory
+            if (!ensureHuntDirectory(argv[2])) {
+                printf("Cannot remove treasure - no write permission for hunt directory.\n");
+                return 1;
+            }
+            
             char treasuresPath[1024];
             sprintf(treasuresPath, "Hunts/%s/treasures.dat", argv[2]);
             int treasureFile = open(treasuresPath, O_RDONLY);
@@ -602,7 +760,7 @@ int main(int argc, char *argv[])
             // Log the removal of the treasure
             char logPath[1024];
             sprintf(logPath, "Hunts/%s/log.txt", argv[2]);
-            int logFile = open(logPath, O_WRONLY | O_APPEND, 0644);
+            int logFile = open(logPath, O_WRONLY | O_APPEND | O_CREAT, 0644);
             if (logFile == -1)
             {
                 perror("Error opening log file.\n");
@@ -628,4 +786,6 @@ int main(int argc, char *argv[])
             close(logFile);
         }
     }
+    
+    return 0;
 }

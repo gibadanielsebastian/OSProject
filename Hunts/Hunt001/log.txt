@@ -1,22 +1,8 @@
-2025-04-13 21:26:24 - Added Treasure ID: 1, User: 1, Coordinate: (1.00, 1.00), Clue: 1, Value: 1
-2025-04-13 21:27:44 - Listed treasures.
-2025-04-13 21:27:55 - Removed Treasure ID: 1 from Hunt Hunt001.
-2025-04-13 21:27:57 - Listed treasures.
-2025-04-13 21:30:09 - Added Treasure ID: 1, User: 1, Coordinate: (1.00, 1.00), Clue: 11, Value: 1
-2025-04-13 21:31:16 - Added Treasure ID: 2, User: 1s, Coordinate: (1.00, 1.00), Clue: 1, Value: 1
-2025-04-13 21:31:27 - Added Treasure ID: 3, User: 21, Coordinate: (1.00, 1.00), Clue: 1, Value: 1
-2025-04-13 21:32:16 - Added Treasure ID: 4, User: da, Coordinate: (11.00, 1.00), Clue: 1, Value: 1
-2025-04-14 15:10:40 - Listed treasures.
-2025-04-14 15:10:48 - Viewed Treasure ID: 1.
-2025-05-05 08:40:01 - Listed treasures.
-2025-05-05 08:42:52 - Listed treasures.
-2025-05-05 08:43:47 - Listed treasures.
-2025-05-05 08:44:13 - Listed treasures.
-2025-05-05 08:45:07 - Listed treasures.
-2025-05-05 08:45:22 - Added Treasure ID: 5, User: dsa, Coordinate: (1.00, 1.00), Clue: 1, Value: 1
-2025-05-05 08:49:32 - Added Treasure ID: 6, User: 1dsa, Coordinate: (1.00, 1.00), Clue: 1, Value: 1
-2025-05-05 08:59:21 - Listed treasures.
-2025-05-05 09:03:39 - Listed treasures.
-2025-05-05 09:14:22 - Listed treasures.
-2025-05-05 09:14:40 - Viewed Treasure ID: 1.
-2025-05-05 09:21:27 - Listed treasures.
+2025-05-05 22:43:57 - Added Treasure ID: 1, User: 1, Coordinate: (1.00, 1.00), Clue: 11, Value: 1
+2025-05-05 22:43:59 - Listed treasures.
+2025-05-18 08:39:09 - Listed treasures.
+2025-05-18 08:39:19 - Viewed Treasure ID: 1.
+2025-05-18 08:53:35 - Calculated scores for hunt Hunt001.
+2025-05-18 08:54:16 - Added Treasure ID: 2, User: dani, Coordinate: (2.00, 2.00), Clue: 2, Value: 2
+2025-05-18 08:55:23 - Calculated scores for hunt Hunt001.
+2025-05-18 09:11:32 - Calculated scores for hunt Hunt001.
